@@ -1,8 +1,8 @@
 package com.kalebtavares.nfest.controller;
 
-import com.kalebtavares.nfest.service.ReportService;
 import com.kalebtavares.nfest.model.NotaFiscal;
 import com.kalebtavares.nfest.model.Produto;
+import com.kalebtavares.nfest.service.ReportService;
 import com.kalebtavares.nfest.service.TaxCalculatorService;
 import com.kalebtavares.nfest.service.XmlParserService;
 import com.kalebtavares.nfest.util.AlertUtil;
@@ -22,43 +22,35 @@ import java.util.Locale;
 
 public class MainController {
 
-    @FXML
-    private Label lblEmitente;
-    @FXML
-    private Label lblDestinatario;
-    @FXML
-    private Label lblChave;
-    @FXML
-    private Label lblTotalProdutos;
-    @FXML
-    private Label lblTotalSt;
-    @FXML
-    private Button btnGerarRelatorio;
+    // --- Elementos da Tela (FXML) ---
+    @FXML private Label lblEmitente;
+    @FXML private Label lblDestinatario;
+    @FXML private Label lblChave;
+    @FXML private Label lblTotalProdutos;
+    @FXML private Label lblTotalSt;
 
-    @FXML
-    private TableView<Produto> tabelaProdutos;
-    @FXML
-    private TableColumn<Produto, String> colCodigo;
-    @FXML
-    private TableColumn<Produto, String> colNome;
-    @FXML
-    private TableColumn<Produto, String> colNcm;
-    @FXML
-    private TableColumn<Produto, Double> colValor;
-    @FXML
-    private TableColumn<Produto, Double> colMva;
-    @FXML
-    private TableColumn<Produto, Double> colIcmsSt;
+    // Botões
+    @FXML private Button btnImportar;
+    @FXML private Button btnLimpar; // Botão Novo
+    @FXML private Button btnGerarRelatorio;
 
+    // Tabela e Colunas
+    @FXML private TableView<Produto> tabelaProdutos;
+    @FXML private TableColumn<Produto, String> colCodigo;
+    @FXML private TableColumn<Produto, String> colNome;
+    @FXML private TableColumn<Produto, String> colNcm;
+    @FXML private TableColumn<Produto, Double> colValor;
+    @FXML private TableColumn<Produto, Double> colMva;
+    @FXML private TableColumn<Produto, Double> colIcmsSt;
+
+    // --- Serviços e Dados ---
     private final XmlParserService parserService = new XmlParserService();
     private final TaxCalculatorService taxService = new TaxCalculatorService();
-
-    // Variável para guardar a nota atual na memória para o relatório
-    private NotaFiscal notaAtual;
+    private NotaFiscal notaAtual; // Guarda a nota na memória
 
     @FXML
     public void initialize() {
-        // Configura as colunas da tabela para lerem os campos da classe Produto
+        // Configura as colunas da tabela
         colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colNcm.setCellValueFactory(new PropertyValueFactory<>("ncm"));
@@ -66,8 +58,9 @@ public class MainController {
         colMva.setCellValueFactory(new PropertyValueFactory<>("mvaAplicada"));
         colIcmsSt.setCellValueFactory(new PropertyValueFactory<>("icmsStCalculado"));
 
-        // Formatação monetária nas células (Opcional, mas fica mais bonito)
-        // Se der erro de compilação por versão do JavaFX, pode remover essa parte de setCellFactory
+        // Garante estado inicial dos botões
+        if (btnLimpar != null) btnLimpar.setVisible(false);
+        if (btnGerarRelatorio != null) btnGerarRelatorio.setDisable(true);
     }
 
     @FXML
@@ -77,7 +70,6 @@ public class MainController {
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Arquivos XML", "*.xml"));
 
-        // Pega a janela atual para abrir o modal
         Stage stage = (Stage) lblEmitente.getScene().getWindow();
         File file = fileChooser.showOpenDialog(stage);
 
@@ -98,12 +90,36 @@ public class MainController {
             preencherTela(nota);
 
             this.notaAtual = nota;
-            btnGerarRelatorio.setDisable(false);
+
+            // Ativa os botões
+            if (btnGerarRelatorio != null) btnGerarRelatorio.setDisable(false);
+            if (btnLimpar != null) btnLimpar.setVisible(true);
 
         } catch (Exception e) {
             e.printStackTrace();
             AlertUtil.mostrarErro("Erro ao ler arquivo", e.getMessage());
         }
+    }
+
+    @FXML
+    public void handleLimpar() {
+        // 1. Zera a variável de memória
+        this.notaAtual = null;
+
+        // 2. Limpa os Labels
+        lblEmitente.setText("-");
+        lblDestinatario.setText("-");
+        lblChave.setText("-");
+        lblTotalProdutos.setText("R$ 0,00");
+        lblTotalSt.setText("R$ 0,00");
+
+        // 3. Limpa a Tabela
+        if (tabelaProdutos != null) tabelaProdutos.getItems().clear();
+
+        // 4. Reseta o estado dos botões
+        if (btnGerarRelatorio != null) btnGerarRelatorio.setDisable(true);
+        if (btnLimpar != null) btnLimpar.setVisible(false);
+        if (btnImportar != null) btnImportar.setDisable(false);
     }
 
     private void preencherTela(NotaFiscal nota) {
@@ -127,31 +143,25 @@ public class MainController {
     @FXML
     public void handleGerarRelatorio() {
         if (this.notaAtual != null) {
-            // Configura o seletor de onde salvar o arquivo
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Salvar Relatório PDF");
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
 
-            // Sugere um nome de arquivo padrão
-            fileChooser.setInitialFileName("Relatorio_NFe_" + notaAtual.getChaveAcesso() + ".pdf");
+            // Sugere nome padrão
+            String nomePadrao = "Relatorio_" + (notaAtual.getChaveAcesso() != null ? notaAtual.getChaveAcesso() : "NFe") + ".pdf";
+            fileChooser.setInitialFileName(nomePadrao);
 
             Stage stage = (Stage) lblEmitente.getScene().getWindow();
             File file = fileChooser.showSaveDialog(stage);
 
             if (file != null) {
                 try {
-                    // Chama o serviço que acabamos de criar
                     ReportService reportService = new ReportService();
                     reportService.gerarRelatorioPdf(notaAtual, file);
-
-                    AlertUtil.mostrarInfo("Sucesso", "Relatório gerado com sucesso em:\n" + file.getAbsolutePath());
-
-                    // Opcional: Tentar abrir o arquivo automaticamente após gerar
-                    // java.awt.Desktop.getDesktop().open(file);
-
+                    AlertUtil.mostrarInfo("Sucesso", "Relatório salvo em:\n" + file.getAbsolutePath());
                 } catch (Exception e) {
                     e.printStackTrace();
-                    AlertUtil.mostrarErro("Erro ao gerar PDF", e.getMessage());
+                    AlertUtil.mostrarErro("Erro PDF", "Não foi possível gerar o relatório:\n" + e.getMessage());
                 }
             }
         }

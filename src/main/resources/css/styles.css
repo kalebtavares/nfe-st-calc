@@ -85,3 +85,8 @@
 }
 .btn-success:hover { -fx-background-color: #2ecc71; }
 .btn-success:disabled { -fx-background-color: #95a5a6; }
+/* Botão de Perigo / Apagar */
+.btn-danger {
+    -fx-background-color: #e74c3c;
+}
+.btn-danger:hover { -fx-background-color: #c0392b; }
