@@ -1,5 +1,9 @@
 package com.kalebtavares.nfest.model;
+import lombok.Data;
 
+@Data
 public class RegraTributaria {
-    // TODO: Implementar lógica
+    private String ncm;
+    private Double mva;
+    private Double aliquotaInterna;
 }
