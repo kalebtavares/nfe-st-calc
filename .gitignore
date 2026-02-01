@@ -1,0 +1,46 @@
+# --- Arquivos Compilados e Logs (Java) ---
+*.class
+*.log
+*.ctxt
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# --- Maven (Essencial) ---
+# Ignora a pasta target onde ficam os builds e executáveis temporários
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+dependency-reduced-pom.xml
+
+# --- IntelliJ IDEA ---
+# Ignora configurações específicas da sua máquina/IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# --- Banco de Dados Local (H2 Database) ---
+# Ignora o arquivo físico do banco de dados para não subir dados de teste
+*.mv.db
+*.trace.db
+
+# --- Sistema Operacional ---
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Mac (caso compartilhe o projeto)
+.DS_Store
+
+# --- Arquivos de Teste do Usuário ---
+# Ignora XMLs soltos na raiz para você não vazar dados fiscais reais no Git
+*.xml
+!pom.xml
+# (O ! acima diz: ignore todos xml, MENOS o pom.xml que é vital)
