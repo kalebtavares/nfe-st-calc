@@ -17,29 +17,35 @@ public class XmlParserService {
 
     public XmlParserService() {
         this.xmlMapper = new XmlMapper();
-        // Configurações para não quebrar se sobrar campo ou faltar tag
         this.xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public NotaFiscal lerNotaFiscal(File arquivoXml) throws IOException {
-        // Lemos a árvore completa do XML primeiro para navegar manualmente nas listas
-        // Isso evita erros comuns de mapeamento automático em XMLs complexos como NFe
         JsonNode rootNode = xmlMapper.readTree(arquivoXml);
 
-        // Verifica se começa com nfeProc (padrão) ou NFe direto
-        JsonNode nfeNode = rootNode.has("NFe") ? rootNode.get("NFe") : rootNode;
-        if (rootNode.has("protNFe") && rootNode.has("NFe")) {
-            // Estrutura de distribuição
+        // Tratamento para diferentes estruturas de XML (nfeProc vs NFe puro)
+        JsonNode nfeNode;
+        if (rootNode.has("NFe")) {
             nfeNode = rootNode.get("NFe");
+        } else if (rootNode.has("infNFe")) {
+            nfeNode = rootNode; // Caso pegue direto o nó interno
+        } else {
+            // Tenta navegar padrão
+            nfeNode = rootNode.get("NFe");
+        }
+
+        // Se a nota vier envelopada em nfeProc (padrão Receita), o NFe está dentro
+        if (nfeNode == null && rootNode.has("protNFe")) {
+            // Estrutura atípica, mas vamos tentar garantir
+            nfeNode = rootNode;
         }
 
         JsonNode infNFe = nfeNode.get("infNFe");
 
-        // Criamos o objeto manualmente para garantir precisão
         NotaFiscal nota = new NotaFiscal();
 
-        // Cabeçalho
-        nota.setChaveAcesso(infNFe.get("Id").asText());
+        // --- Cabeçalho ---
+        if (infNFe.has("Id")) nota.setChaveAcesso(infNFe.get("Id").asText());
 
         // Emitente
         JsonNode emit = infNFe.get("emit");
@@ -49,14 +55,16 @@ public class XmlParserService {
         // Destinatário
         JsonNode dest = infNFe.get("dest");
         nota.setNomeDestinatario(dest.get("xNome").asText());
-        nota.setUfDestino(dest.get("enderDest").get("UF").asText());
+        if (dest.has("enderDest") && dest.get("enderDest").has("UF")) {
+            nota.setUfDestino(dest.get("enderDest").get("UF").asText());
+        }
 
         // Totais
         JsonNode total = infNFe.get("total").get("ICMSTot");
         nota.setValorTotalNota(total.get("vNF").asDouble());
         nota.setValorTotalProdutos(total.get("vProd").asDouble());
 
-        // Produtos (Iterar sobre a lista <det>)
+        // --- Produtos ---
         List<Produto> produtos = new ArrayList<>();
         JsonNode detNode = infNFe.get("det");
 
@@ -65,7 +73,6 @@ public class XmlParserService {
                 produtos.add(mapearProduto(det));
             }
         } else {
-            // Caso só tenha 1 produto, o Jackson as vezes não retorna array
             produtos.add(mapearProduto(detNode));
         }
 
@@ -83,21 +90,26 @@ public class XmlParserService {
         p.setCfop(prod.get("CFOP").asText());
         p.setValorProduto(prod.get("vProd").asDouble());
 
-        // Verifica se existe CEST (Código Especificador da ST)
-        if (prod.has("CEST")) {
-            p.setCest(prod.get("CEST").asText());
-        }
+        if (prod.has("CEST")) p.setCest(prod.get("CEST").asText());
 
-        // Verifica Frete
+        // Frete (Item a Item)
         if (prod.has("vFrete")) {
             p.setValorFrete(prod.get("vFrete").asDouble());
         } else {
             p.setValorFrete(0.0);
         }
 
-        // Verifica IPI (está dentro da tag impostos, mas as vezes simplificado)
-        // Por hora, deixaremos IPI zerado até implementarmos a regra fina de impostos
-        p.setValorIPI(0.0);
+        // --- LÓGICA DE IPI (Correção Importante) ---
+        // O IPI fica em: det -> imposto -> IPI -> IPITrib -> vIPI
+        p.setValorIPI(0.0); // Padrão
+        if (det.has("imposto") && det.get("imposto").has("IPI")) {
+            JsonNode ipiNode = det.get("imposto").get("IPI");
+
+            // IPI Tributado
+            if (ipiNode.has("IPITrib") && ipiNode.get("IPITrib").has("vIPI")) {
+                p.setValorIPI(ipiNode.get("IPITrib").get("vIPI").asDouble());
+            }
+        }
 
         return p;
     }
