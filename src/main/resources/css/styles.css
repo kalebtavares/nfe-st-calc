@@ -1,0 +1,92 @@
+/* Fundo Geral */
+.root {
+    -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    -fx-background-color: #f4f4f9;
+}
+
+/* Header */
+.header-section {
+    -fx-background-color: #ffffff;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);
+}
+
+.title-label {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.label-sub {
+    -fx-font-size: 11px;
+    -fx-text-fill: #7f8c8d;
+    -fx-font-weight: bold;
+    -fx-text-transform: uppercase;
+}
+
+.label-value {
+    -fx-font-size: 14px;
+    -fx-text-fill: #34495e;
+}
+
+/* Tabela */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5px;
+}
+.table-view .column-header {
+    -fx-background-color: #ecf0f1;
+    -fx-size: 35px;
+    -fx-border-color: transparent transparent #bdc3c7 transparent;
+}
+.table-view .table-cell {
+    -fx-alignment: CENTER-LEFT;
+    -fx-padding: 5px 10px;
+}
+
+/* Rodapé */
+.footer-section {
+    -fx-background-color: #2c3e50;
+}
+
+.label-total-desc {
+    -fx-text-fill: #ecf0f1;
+    -fx-font-size: 12px;
+}
+
+.label-total-value {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.label-total-alert {
+    -fx-text-fill: #e74c3c; /* Vermelho para destaque */
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+/* Botões */
+.button {
+    -fx-cursor: hand;
+    -fx-padding: 8px 15px;
+    -fx-font-size: 13px;
+    -fx-background-radius: 4px;
+    -fx-text-fill: white;
+}
+
+.btn-primary {
+    -fx-background-color: #3498db;
+}
+.btn-primary:hover { -fx-background-color: #2980b9; }
+
+.btn-success {
+    -fx-background-color: #27ae60;
+}
+.btn-success:hover { -fx-background-color: #2ecc71; }
+.btn-success:disabled { -fx-background-color: #95a5a6; }
+/* Botão de Perigo / Apagar */
+.btn-danger {
+    -fx-background-color: #e74c3c;
+}
+.btn-danger:hover { -fx-background-color: #c0392b; }
